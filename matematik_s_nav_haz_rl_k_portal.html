@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematik Sınavına Hazırlık Portalı - Doğrusal Fonksiyonlar</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- KaTeX for crisp Math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- Canvas Confetti for correct answers -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .math-expr {
+            font-size: 1.15rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2.5 rounded-xl shadow-lg shadow-cyan-500/20">
+                    <i class="fa-solid fa-calculator text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide text-white">Matematik Sınav Koçu</h1>
+                    <p class="text-xs text-cyan-400 font-semibold">Design by Yusuf Berat Demetgül</p>
+                </div>
+            </div>
+            
+            <!-- Quick Stats Header -->
+            <div class="flex items-center gap-4 text-sm">
+                <div class="hidden sm:flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-lg">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span class="text-slate-400">Skor:</span>
+                    <span id="score-display" class="font-bold text-amber-400">0</span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-lg">
+                    <i class="fa-solid fa-fire text-rose-500"></i>
+                    <span class="text-slate-400 hidden sm:inline">Seri:</span>
+                    <span id="streak-display" class="font-bold text-rose-400">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Sidebar: Question Selector -->
+        <aside class="lg:col-span-4 flex flex-col gap-4">
+            <div class="glass-card rounded-2xl p-4 shadow-xl">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-cyan-400"></i> Soru Tipleri (Sınav Konuları)
+                </h2>
+                <div id="topic-list" class="space-y-2">
+                    <!-- Topics will be generated dynamically -->
+                </div>
+            </div>
+
+            <!-- Stats & Progress Panel -->
+            <div class="glass-card rounded-2xl p-5 shadow-xl space-y-4">
+                <h3 class="font-bold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-cyan-400"></i> Çalışma İstatistiklerin
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl">
+                        <div class="text-2xl font-extrabold text-cyan-400" id="total-solved">0</div>
+                        <div class="text-xs text-slate-400 mt-1">Çözülen Soru</div>
+                    </div>
+                    <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl">
+                        <div class="text-2xl font-extrabold text-emerald-400" id="accuracy-rate">0%</div>
+                        <div class="text-xs text-slate-400 mt-1">Başarı Oranı</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Main Panel: Question & Interactive Canvas -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+            <div class="glass-card rounded-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[460px]">
+                
+                <!-- Top Question Status Bar -->
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                        <div class="flex items-center gap-2">
+                            <span id="question-badge" class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-xs font-semibold px-2.5 py-1 rounded-md">
+                                Soru Tipi #1
+                            </span>
+                            <span id="question-category" class="text-xs text-slate-400 font-medium">Noktanın Eksenlere Uzaklığı</span>
+                        </div>
+                        <button id="btn-new-random" onclick="generateNewQuestion()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate text-cyan-400"></i> Sayıları Değiştir (Yeni Soru)
+                        </button>
+                    </div>
+
+                    <!-- Question Content Area -->
+                    <div id="question-body" class="space-y-4 my-2">
+                        <!-- Dynamic Question HTML injected here -->
+                    </div>
+                </div>
+
+                <!-- Answer Input & Action Controls -->
+                <div class="pt-6 border-t border-slate-800 space-y-4">
+                    <form id="answer-form" onsubmit="handleAnswerSubmit(event)" class="space-y-4">
+                        <div id="input-container" class="flex flex-col sm:flex-row gap-3">
+                            <!-- Dynamic inputs will be inserted here -->
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <button type="submit" id="btn-submit" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/25 transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Cevabı Kontrol Et
+                            </button>
+                            
+                            <button type="button" onclick="toggleSolution()" id="btn-solution-toggle" class="px-4 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-lightbulb text-amber-400"></i> Çözüm Adımlarını Göster
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Feedback Alert Message -->
+                    <div id="feedback-alert" class="hidden p-4 rounded-xl border transition-all duration-300"></div>
+
+                    <!-- Step-by-Step Solution Drawer -->
+                    <div id="solution-box" class="hidden bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
+                        <h4 class="text-sm font-bold text-cyan-400 flex items-center gap-2 border-b border-slate-800 pb-2">
+                            <i class="fa-solid fa-graduation-cap"></i> Detaylı Adım Adım Çözüm
+                        </h4>
+                        <div id="solution-content" class="text-sm text-slate-300 space-y-2 leading-relaxed">
+                            <!-- Solution steps inserted dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-5 text-center text-xs text-slate-500 space-y-1">
+        <div class="font-bold text-slate-400 text-sm">Design by Yusuf Berat Demetgül</div>
+        <div>Matematik Yazılı Hazırlık Platformu &bull; Sınavında Başarılar Dileriz! 🚀</div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- QUESTION TEMPLATES AND GENERATORS ---
+        let currentTopicIndex = 0;
+        let currentQuestionData = {};
+        let stats = {
+            solved: 0,
+            correct: 0,
+            score: 0,
+            streak: 0
+        };
+
+        const topics = [
+            { id: 1, title: "Noktanın Eksenlere Uzaklığı", icon: "fa-location-dot" },
+            { id: 2, title: "Fonksiyon Değer Hesaplama", icon: "fa-square-root-variable" },
+            { id: 3, title: "Birim Fonksiyon (m Hesabı)", icon: "fa-equals" },
+            { id: 4, title: "Sabit Fonksiyon (m Hesabı)", icon: "fa-lock" },
+            { id: 5, title: "Doğrusal Fonksiyon Şartı", icon: "fa-chart-line" },
+            { id: 6, title: "İki Noktadan Eğim Bulma", icon: "fa-ruler-combined" },
+            { id: 7, title: "Taksi Ücreti Doğrusal Denklemi", icon: "fa-taxi" },
+            { id: 8, title: "Otopark Ücreti Doğrusal Denklemi", icon: "fa-square-parking" },
+            { id: 9, title: "Bitki Büyüme Tablosu & Fonksiyonu", icon: "fa-seedling" }
+        ];
+
+        // Helper Random Functions
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const getRandomNonZero = (min, max) => {
+            let num = 0;
+            while (num === 0) num = getRandomInt(min, max);
+            return num;
+        };
+
+        // Generator Functions for Each Problem Pattern
+        const questionGenerators = [
+            // 1. Noktanın Eksenlere Uzaklığı
+            () => {
+                const x = getRandomNonZero(-9, 9);
+                const y = getRandomNonZero(-9, 9);
+                const distY = Math.abs(x); // distance to y-axis is |x|
+                const distX = Math.abs(y); // distance to x-axis is |y|
+                const total = distX + distY;
+
+                return {
+                    category: "Noktanın Eksenlere Uzaklığı",
+                    text: `<b>A(${x}, ${y})</b> noktasının <b>x eksenine uzaklığı</b> ile <b>y eksenine uzaklığının toplamını</b> bulunuz.`,
+                    inputs: [{ id: "ans", label: "Toplam Uzaklık =", placeholder: "Örn: 13" }],
+                    checkAnswer: (values) => parseInt(values.ans) === total,
+                    correctAnswerText: `${total}`,
+                    solution: [
+                        `<b>Kural:</b> Bir A(x, y) noktasının x-eksenine uzaklığı <span class="text-cyan-400">|y|</span>, y-eksenine uzaklığı <span class="text-cyan-400">|x|</span> kadardır.`,
+                        `A(${x}, ${y}) noktası için:`,
+                        `• x-eksenine uzaklık = |${y}| = <b>${distX}</b> birim`,
+                        `• y-eksenine uzaklık = |${x}| = <b>${distY}</b> birim`,
+                        `<b>Toplam Uzaklık:</b> ${distX} + ${distY} = <span class="text-emerald-400 font-bold text-base">${total}</span>`
+                    ]
+                };
+            },
+
+            // 2. Fonksiyon Değer Bulma
+            () => {
+                const a = getRandomNonZero(-7, 7);
+                const b = getRandomNonZero(-10, 10);
+                const val1 = getRandomInt(-5, 6);
+                const val2 = getRandomInt(-5, 6);
+                
+                const res1 = a * val1 + b;
+                const res2 = a * val2 + b;
+
+                const bSign = b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`;
+
+                return {
+                    category: "Fonksiyon Değer Hesaplama",
+                    text: `<div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                            <b>f(x) = ${a}x ${bSign}</b> olduğuna göre;
+                            <div class="mt-2 flex gap-4 text-cyan-400 font-semibold">
+                                <span>a) f(${val1}) = ?</span>
+                                <span>b) f(${val2}) = ?</span>
+                            </div>
+                           </div>`,
+                    inputs: [
+                        { id: "ans1", label: `f(${val1}) =`, placeholder: "Sonuç" },
+                        { id: "ans2", label: `f(${val2}) =`, placeholder: "Sonuç" }
+                    ],
+                    checkAnswer: (values) => parseInt(values.ans1) === res1 && parseInt(values.ans2) === res2,
+                    correctAnswerText: `f(${val1}) = ${res1}, f(${val2}) = ${res2}`,
+                    solution: [
+                        `Fonksiyonda istenen x değerlerini yerine koyarak hesaplayalım:`,
+                        `<b>f(${val1}) için:</b> f(${val1}) = ${a} &middot; (${val1}) ${bSign} = ${a * val1} ${bSign} = <span class="text-emerald-400 font-bold">${res1}</span>`,
+                        `<b>f(${val2}) için:</b> f(${val2}) = ${a} &middot; (${val2}) ${bSign} = ${a * val2} ${bSign} = <span class="text-emerald-400 font-bold">${res2}</span>`
+                    ]
+                };
+            },
+
+            // 3. Birim Fonksiyon (m Hesabı)
+            () => {
+                // f(x) = (m - k)x -> birim fonksiyon f(x)=x olmalı -> m-k = 1 -> m = k + 1
+                const k = getRandomInt(1, 9);
+                const targetM = k + 1;
+
+                return {
+                    category: "Birim Fonksiyon Özelliği",
+                    text: `<b>f(x) = (m - ${k})x</b> fonksiyonu <b>birim (özdeş) fonksiyon</b> olduğuna göre <b>"m"</b> değeri kaçtır?`,
+                    inputs: [{ id: "ans", label: "m =", placeholder: "Örn: 4" }],
+                    checkAnswer: (values) => parseInt(values.ans) === targetM,
+                    correctAnswerText: `m = ${targetM}`,
+                    solution: [
+                        `<b>Kural:</b> Birim fonksiyon f(x) = x şeklindedir. x'in katsayısı <b>1</b> olmalı, sabit terim <b>0</b> olmalıdır.`,
+                        `Denklemde x'in katsayısını 1'e eşitleyelim:`,
+                        `m - ${k} = 1`,
+                        `m = 1 + ${k} &rArr; <span class="text-emerald-400 font-bold text-base">m = ${targetM}</span>`
+                    ]
+                };
+            },
+
+            // 4. Sabit Fonksiyon (m Hesabı)
+            () => {
+                // f(x) = (m - k)x + C -> sabit fonksiyon -> m-k = 0 -> m = k
+                const k = getRandomInt(2, 12);
+                const c = getRandomNonZero(-15, 15);
+
+                return {
+                    category: "Sabit Fonksiyon Özelliği",
+                    text: `<b>f(x) = (m - ${k})x ${c >= 0 ? '+ ' + c : '- ' + Math.abs(c)}</b> fonksiyonu <b>sabit fonksiyon</b> olduğuna göre <b>"m"</b> değeri kaçtır?`,
+                    inputs: [{ id: "ans", label: "m =", placeholder: "Örn: 3" }],
+                    checkAnswer: (values) => parseInt(values.ans) === k,
+                    correctAnswerText: `m = ${k}`,
+                    solution: [
+                        `<b>Kural:</b> Sabit fonksiyonda <b>x'li terim bulunmaz</b> (x'in katsayısı 0'a eşittir).`,
+                        `x'in katsayısını 0'a eşitleyelim:`,
+                        `m - ${k} = 0`,
+                        `m = <span class="text-emerald-400 font-bold text-base">${k}</span>`
+                    ]
+                };
+            },
+
+            // 5. Doğrusal Fonksiyon Şartı
+            () => {
+                // f(x) = (m - k)x^3 + 2mx + (m - 1)
+                const k = getRandomInt(2, 6); // m = k
+                const m = k;
+                const evalX = getRandomInt(-3, 3);
+                
+                // f(x) = 2mx + (m-1) => 2*m*x + m - 1
+                const evalRes = 2 * m * evalX + (m - 1);
+
+                return {
+                    category: "Doğrusal Fonksiyon Derecesi",
+                    text: `<b>f(x) = (m - ${k})x³ + ${2*m > 0 ? 2*m : ''}x + m - 1</b> fonksiyonu <b>doğrusal fonksiyon</b> olduğuna göre, <b>f(${evalX})</b> kaçtır?`,
+                    inputs: [
+                        { id: "ansM", label: "m Değeri =", placeholder: "m" },
+                        { id: "ansF", label: `f(${evalX}) =`, placeholder: "Sonuç" }
+                    ],
+                    checkAnswer: (values) => parseInt(values.ansM) === m && parseInt(values.ansF) === evalRes,
+                    correctAnswerText: `m = ${m}, f(${evalX}) = ${evalRes}`,
+                    solution: [
+                        `<b>1. Adım:</b> Doğrusal fonksiyonlar f(x) = ax + b formundadır. Derecesi 1'dir, bu yüzden <b>x³ terimi olamaz</b> (katsayısı 0 olmalıdır).`,
+                        `m - ${k} = 0 &rArr; <span class="text-cyan-400 font-bold">m = ${k}</span>`,
+                        `<b>2. Adım:</b> m = ${k} değerini fonksiyonda yerine yazalım:`,
+                        `f(x) = (0)x³ + ${2*k}x + (${k} - 1) &rArr; <b>f(x) = ${2*k}x + ${k-1}</b>`,
+                        `<b>3. Adım:</b> Şimdi f(${evalX}) değerini hesaplayalım:`,
+                        `f(${evalX}) = ${2*k} &middot; (${evalX}) + ${k-1} = ${2*k*evalX} + ${k-1} = <span class="text-emerald-400 font-bold text-base">${evalRes}</span>`
+                    ]
+                };
+            },
+
+            // 6. İki Noktadan Eğim Bulma
+            () => {
+                const x1 = getRandomInt(-5, 5);
+                let x2 = getRandomInt(-5, 5);
+                while (x2 === x1) x2 = getRandomInt(-5, 5);
+
+                const y1 = getRandomInt(-8, 8);
+                const mult = getRandomInt(-3, 4) || 1;
+                const y2 = y1 + mult * (x2 - x1); // ensures integer slope for clean input
+
+                const slope = (y2 - y1) / (x2 - x1);
+
+                return {
+                    category: "Analitik Geometri: Eğim Bulma",
+                    text: `<b>A(${x1}, ${y1})</b> ve <b>B(${x2}, ${y2})</b> noktalarından geçen doğrunun <b>eğimi (m)</b> kaçtır?`,
+                    inputs: [{ id: "ans", label: "Eğim (m) =", placeholder: "Örn: 2" }],
+                    checkAnswer: (values) => parseInt(values.ans) === slope,
+                    correctAnswerText: `m = ${slope}`,
+                    solution: [
+                        `<b>Eğim Formülü:</b> m = (y₂ - y₁) / (x₂ - x₁)`,
+                        `Verilen noktalar: A(${x1}, ${y1}) ve B(${x2}, ${y2})`,
+                        `m = (${y2} - (${y1})) / (${x2} - (${x1}))`,
+                        `m = (${y2 - y1}) / (${x2 - x1}) = <span class="text-emerald-400 font-bold text-base">${slope}</span>`
+                    ]
+                };
+            },
+
+            // 7. Taksi Ücreti Problemi
+            () => {
+                const startFee = getRandomInt(15, 30); // Açılış ücreti
+                const perKm = getRandomInt(8, 18);    // Km başı ücret
+                const testKm = getRandomInt(3, 10);    // Kaç km gitti
+                const totalFee = startFee + perKm * testKm;
+
+                return {
+                    category: "Günlük Hayat Problemleri: Taksi Ücreti",
+                    text: `Bir taksimetrenin <b>açılış ücreti ${startFee} TL</b>'dir. Taksi ile gidilen <b>her kilometre için ${perKm} TL</b> alınmaktadır.
+                           <br><br>
+                           • Gidilen km "x", ödenecek toplam tutar "y" olmak üzere doğrusal denklemi yazınız.
+                           <br>
+                           • <b>${testKm} km</b> yol giden bir yolcu kaç TL öder?`,
+                    inputs: [
+                        { id: "ansPerKm", label: "x'in katsayısı (km başı TL) =", placeholder: "Örn: 15" },
+                        { id: "ansStart", label: "Sabit Ücret (Açılış) =", placeholder: "Örn: 20" },
+                        { id: "ansTotal", label: `${testKm} km için toplam ücret (TL) =`, placeholder: "Örn: 80" }
+                    ],
+                    checkAnswer: (values) => 
+                        parseInt(values.ansPerKm) === perKm && 
+                        parseInt(values.ansStart) === startFee && 
+                        parseInt(values.ansTotal) === totalFee,
+                    correctAnswerText: `y = ${perKm}x + ${startFee}, ${testKm} km için ${totalFee} TL`,
+                    solution: [
+                        `<b>A Şıkkı (Doğrusal Denklem):</b> Toplam Ücret (y) = (Km başı ücret &middot; x) + Açılış Ücreti`,
+                        `Denklem: <span class="text-cyan-400 font-bold">y = ${perKm}x + ${startFee}</span>`,
+                        `<b>B Şıkkı (${testKm} km Hesabı):</b> x yerine ${testKm} yazalım:`,
+                        `y = ${perKm} &middot; (${testKm}) + ${startFee} = ${perKm * testKm} + ${startFee} = <span class="text-emerald-400 font-bold text-base">${totalFee} TL</span>`
+                    ]
+                };
+            },
+
+            // 8. Otopark Ücreti Problemi
+            () => {
+                const entryFee = getRandomInt(10, 25); // Giriş ücreti
+                const hourlyFee = getRandomInt(5, 12);  // Saatlik ücret
+                const hour = getRandomInt(2, 8);        // Kalınan saat
+                const totalCost = entryFee + hourlyFee * hour;
+
+                return {
+                    category: "Günlük Hayat Problemleri: Otopark Ücreti",
+                    text: `Bir otoparkta <b>giriş ücreti ${entryFee} TL</b>, sonraki <b>her saat başına ise ${hourlyFee} TL</b> alınmaktadır.
+                           <br><br>
+                           "x" saat cinsinden kalma süresi, F(x) TL cinsinden ödenecek para olmak üzere:
+                           <br>
+                           • <b>F(x)</b> doğrusal fonksiyonunu ve <b>${hour} saat</b> kalan bir aracın ödeyeceği tutarı bulunuz.`,
+                    inputs: [
+                        { id: "ansF", label: "F(x) = (a·x + b) biçiminde x katsayısı a =", placeholder: "a" },
+                        { id: "ansConst", label: "Sabit Terim b =", placeholder: "b" },
+                        { id: "ansResult", label: `${hour} Saat Sonraki Ücret =`, placeholder: "TL" }
+                    ],
+                    checkAnswer: (values) => 
+                        parseInt(values.ansF) === hourlyFee && 
+                        parseInt(values.ansConst) === entryFee && 
+                        parseInt(values.ansResult) === totalCost,
+                    correctAnswerText: `F(x) = ${hourlyFee}x + ${entryFee}, F(${hour}) = ${totalCost}`,
+                    solution: [
+                        `<b>1. Adım:</b> Saatlik değişim miktarı x'in katsayısıdır (${hourlyFee}). Sabit giriş ücreti sabittir (${entryFee}).`,
+                        `Fonksiyon: <span class="text-cyan-400 font-bold">F(x) = ${hourlyFee}x + ${entryFee}</span>`,
+                        `<b>2. Adım:</b> ${hour} saat için x = ${hour} yazılır:`,
+                        `F(${hour}) = ${hourlyFee} &middot; ${hour} + ${entryFee} = ${hourlyFee * hour} + ${entryFee} = <span class="text-emerald-400 font-bold text-base">${totalCost} TL</span>`
+                    ]
+                };
+            },
+
+            // 9. Bitki Büyüme Hızı Tablosu
+            () => {
+                const numerator = getRandomInt(3, 9);
+                const month = getRandomInt(4, 12);
+                const growth = (numerator / 2) * month;
+
+                return {
+                    category: "Doğrusal Fonksiyonlar: Büyüme Oranı",
+                    text: `<b>f(x) = (${numerator}/2)x</b> fonksiyon hızı ile büyüyen bir bitki veriliyor.
+                           <br><br>
+                           Buna göre bu bitkinin <b>${month}. aydaki toplam büyüme miktarını</b> birim cinsinden bulunuz.`,
+                    inputs: [{ id: "ans", label: `${month}. Aydaki Büyüme (Birim) =`, placeholder: "Örn: 25" }],
+                    checkAnswer: (values) => Math.abs(parseFloat(values.ans) - growth) < 0.01,
+                    correctAnswerText: `${growth} birim`,
+                    solution: [
+                        `Bitkinin büyüme hızı fonksiyonu: <b>f(x) = (${numerator}/2) &middot; x</b>`,
+                        `x = ${month} ayı temsil eder. Denkleme koyalım:`,
+                        `f(${month}) = (${numerator}/2) &middot; ${month}`,
+                        `f(${month}) = ${numerator} &middot; ${month / 2} = <span class="text-emerald-400 font-bold text-base">${growth}</span> birim büyüme gerçekleşir.`
+                    ]
+                };
+            }
+        ];
+
+        // --- APP CONTROLLER FUNCTIONS ---
+
+        function initApp() {
+            renderTopicList();
+            loadQuestion(0);
+        }
+
+        function renderTopicList() {
+            const listEl = document.getElementById("topic-list");
+            listEl.innerHTML = topics.map((t, idx) => `
+                <button onclick="switchTopic(${idx})" 
+                        class="w-full text-left p-3 rounded-xl border transition flex items-center gap-3 ${idx === currentTopicIndex ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300 font-semibold' : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'}">
+                    <i class="fa-solid ${t.icon} text-sm"></i>
+                    <span class="text-xs sm:text-sm truncate">${t.title}</span>
+                </button>
+            `).join('');
+        }
+
+        function switchTopic(index) {
+            currentTopicIndex = index;
+            renderTopicList();
+            loadQuestion(index);
+        }
+
+        function generateNewQuestion() {
+            loadQuestion(currentTopicIndex);
+        }
+
+        function loadQuestion(index) {
+            // Hide previous solution and feedback
+            document.getElementById("solution-box").classList.add("hidden");
+            document.getElementById("feedback-alert").classList.add("hidden");
+
+            // Generate problem data
+            const generator = questionGenerators[index];
+            currentQuestionData = generator();
+
+            // Render Header info
+            document.getElementById("question-badge").innerText = `Soru Tipi #${index + 1}`;
+            document.getElementById("question-category").innerText = currentQuestionData.category;
+
+            // Render Question Text
+            document.getElementById("question-body").innerHTML = `
+                <div class="text-base sm:text-lg text-slate-200 font-medium leading-relaxed">
+                    ${currentQuestionData.text}
+                </div>
+            `;
+
+            // Render Input Controls
+            const inputContainer = document.getElementById("input-container");
+            inputContainer.innerHTML = currentQuestionData.inputs.map(inp => `
+                <div class="flex-1 min-w-[140px]">
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">${inp.label}</label>
+                    <input type="number" step="any" id="${inp.id}" placeholder="${inp.placeholder}" required
+                           class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-600 outline-none transition font-mono text-sm">
+                </div>
+            `).join('');
+
+            // Render Solution Drawer Content
+            const solContent = document.getElementById("solution-content");
+            solContent.innerHTML = currentQuestionData.solution.map(step => `
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-angle-right text-cyan-500 mt-1"></i>
+                    <div>${step}</div>
+                </div>
+            `).join('');
+        }
+
+        function handleAnswerSubmit(event) {
+            event.preventDefault();
+
+            // Collect input values
+            const values = {};
+            currentQuestionData.inputs.forEach(inp => {
+                const el = document.getElementById(inp.id);
+                values[inp.id] = el ? el.value.trim() : "";
+            });
+
+            const isCorrect = currentQuestionData.checkAnswer(values);
+            const alertEl = document.getElementById("feedback-alert");
+
+            stats.solved++;
+            if (isCorrect) {
+                stats.correct++;
+                stats.score += 10;
+                stats.streak++;
+
+                alertEl.className = "p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-400 block animate-bounce-once";
+                alertEl.innerHTML = `
+                    <div class="flex items-center gap-3 font-bold text-base">
+                        <i class="fa-solid fa-circle-check text-xl"></i>
+                        <span>Tebrikler! Doğru Cevap 🎉</span>
+                    </div>
+                    <p class="text-xs text-emerald-300/80 mt-1">Soru çözümünü mükemmel şekilde tamamladın.</p>
+                `;
+
+                // Trigger mini confetti splash
+                confetti({
+                    particleCount: 40,
+                    spread: 60,
+                    origin: { y: 0.8 }
+                });
+            } else {
+                stats.streak = 0;
+
+                alertEl.className = "p-4 rounded-xl border bg-rose-500/10 border-rose-500/30 text-rose-400 block";
+                alertEl.innerHTML = `
+                    <div class="flex items-center gap-3 font-bold text-base">
+                        <i class="fa-solid fa-circle-xmark text-xl"></i>
+                        <span>Henüz Doğru Değil, Tekrar Deneyebilirsin!</span>
+                    </div>
+                    <p class="text-xs text-rose-300/80 mt-1">Doğru Cevap: <b>${currentQuestionData.correctAnswerText}</b>. Adım adım çözümü incelemek için butona tıkla.</p>
+                `;
+            }
+
+            updateStatsDisplay();
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById("score-display").innerText = stats.score;
+            document.getElementById("streak-display").innerText = stats.streak;
+            document.getElementById("total-solved").innerText = stats.solved;
+            
+            const accuracy = stats.solved > 0 ? Math.round((stats.correct / stats.solved) * 100) : 0;
+            document.getElementById("accuracy-rate").innerText = `${accuracy}%`;
+        }
+
+        function toggleSolution() {
+            const solBox = document.getElementById("solution-box");
+            solBox.classList.toggle("hidden");
+        }
+
+        // Initialize App on Page Load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
